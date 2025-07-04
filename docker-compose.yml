@@ -1,0 +1,21 @@
+services:
+  n8n:
+    image: docker.n8n.io/n8nio/n8n:1.92.1
+    restart: always
+    ports:
+      - "80:5678"
+    environment:
+      - N8N_HOST=0.0.0.0
+      - N8N_PROTOCOL=http
+      - N8N_DIAGNOSTICS_ENABLED=false
+      - WEBHOOK_URL=https://easy-dinosaur-distinctly.ngrok-free.app
+    volumes:
+      - n8n_data:/home/node/.n8n
+    networks:
+      - whatsapp-chatbot_chatbot_network
+
+networks:
+  whatsapp-chatbot_chatbot_network:
+
+volumes:
+  n8n_data:

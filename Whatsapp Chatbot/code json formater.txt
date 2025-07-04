@@ -1,0 +1,20 @@
+for (const item of $input.all()) {
+  // Step 1: Clean up and parse the string
+  const raw = $input.first().json.output || '';
+  const cleaned = raw.trim().replace(/^```json|```$/g, '').trim(); // Remove ```json and ```
+  let parsed = {};
+
+  try {
+    parsed = JSON.parse(cleaned);
+  } catch (err) {
+    parsed = { error: "Invalid JSON format", original: raw };
+  }
+
+  // Step 2: Modify the parsed object
+  parsed.myNewField = 1;
+
+  // Step 3: Replace or attach the result
+  item.json = parsed;
+}
+
+return $input.all();

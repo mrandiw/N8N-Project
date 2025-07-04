@@ -1,0 +1,280 @@
+{
+  "name": "Whatsapp Chatbot",
+  "nodes": [
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.0-flash",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        280,
+        100
+      ],
+      "id": "b2dff910-6c23-47d9-9b35-ef7d71753d82",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "EsWKFX9MjYEdWdW3",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "efd62a18-2847-4b6b-bbe1-f869e8faba43",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -380,
+        -120
+      ],
+      "id": "2b6558ce-491d-4599-bf29-cb3c630ffae4",
+      "name": "Webhook",
+      "webhookId": "efd62a18-2847-4b6b-bbe1-f869e8faba43"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "7ac14abe-6a79-44d3-8f13-1a475cdb1d79",
+              "leftValue": "={{ $json.body.message }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "15be395f-962c-4de8-a569-92fd802e0d0d",
+              "leftValue": "={{ $json.body.sender }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "060d9d47-dd65-45b9-860f-b52db143e046",
+              "leftValue": "={{ $json.body.device_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.2,
+      "position": [
+        -160,
+        -120
+      ],
+      "id": "fbce99cd-70c7-4aad-ae6c-0cdb4e315096",
+      "name": "Filter"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "d31c3c3b-aa57-421f-9f2c-488eef97cc46",
+              "name": "chatInput",
+              "value": "={{ $json.body.message }}",
+              "type": "string"
+            },
+            {
+              "id": "ecb7b22e-267f-43c6-885a-687d958a6b6f",
+              "name": "sender",
+              "value": "={{ $json.body.sender }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        60,
+        -120
+      ],
+      "id": "2a56fc1c-b64f-451d-90d5-33a1449c8ad7",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.chatInput }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "You are an AI named Jenny.\n\nYour only job is to respond to the user input: {{ $json.chatInput }}\n\nRespond with **only** a raw JSON object. Do **not** include:\n- Markdown formatting (such as triple backticks ``` or ```json)\n- Any explanation or extra text\n- Line breaks unless inside the JSON string\n\nOnly output a single-line valid JSON like this:\n\n{ \"answer\": \"your response here\" }\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        300,
+        -120
+      ],
+      "id": "f2839423-ed9b-4e85-9b1c-1d843d30027c",
+      "name": "AI Text to JSON"
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n\t\"answer\": \"How can I help you?\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.2,
+      "position": [
+        460,
+        220
+      ],
+      "id": "0c06d3e3-6f21-42f9-8e08-306a61c9bcdd",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.satuconnect.my.id/agent/message",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "XXXXXXX"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"deviceID\": \"62896xxxxxx\", \n  \"phoneNumbers\": \"{{ $('Edit Fields').item.json.sender }}\",\n  \"message\": \"{{ $json.answer }}\"\n} ",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        840,
+        -120
+      ],
+      "id": "bfac0fe5-d873-468b-b477-113ad41dcc2f",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "jsCode": "for (const item of $input.all()) {\n  // Step 1: Clean up and parse the string\n  const raw = $input.first().json.output || '';\n  const cleaned = raw.trim().replace(/^```json|```$/g, '').trim(); // Remove ```json and ```\n  let parsed = {};\n\n  try {\n    parsed = JSON.parse(cleaned);\n  } catch (err) {\n    parsed = { error: \"Invalid JSON format\", original: raw };\n  }\n\n  // Step 2: Modify the parsed object\n  parsed.myNewField = 1;\n\n  // Step 3: Replace or attach the result\n  item.json = parsed;\n}\n\nreturn $input.all();\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        660,
+        -120
+      ],
+      "id": "1c2d6768-15b5-4633-a182-05fbf7fbe696",
+      "name": "Code"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Text to JSON",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Filter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "AI Text to JSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        []
+      ]
+    },
+    "AI Text to JSON": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "0b453a98-b6d1-46c9-991e-e0b1dd42378e",
+  "meta": {
+    "instanceId": "878f429b2686367260a308dbafd51727b9c43f4831144617461b0c5acf76e09d"
+  },
+  "id": "9kwhMILXl5LffoiB",
+  "tags": []
+}
