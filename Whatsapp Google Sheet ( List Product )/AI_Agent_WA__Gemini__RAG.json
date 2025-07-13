@@ -1,0 +1,464 @@
+{
+  "name": "AI Agent WA, Gemini, RAG",
+  "nodes": [
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.0-flash",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        940,
+        220
+      ],
+      "id": "0edceeaa-0d56-4ad8-9d7c-55dc1b163cdc",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "EsWKFX9MjYEdWdW3",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "efd62a18-2847-4b6b-bbe1-f869e8faba43",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        180,
+        0
+      ],
+      "id": "3b9cce6b-3c64-48a9-b050-bec56db169ad",
+      "name": "Webhook",
+      "webhookId": "efd62a18-2847-4b6b-bbe1-f869e8faba43"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "7ac14abe-6a79-44d3-8f13-1a475cdb1d79",
+              "leftValue": "={{ $json.body.message }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "15be395f-962c-4de8-a569-92fd802e0d0d",
+              "leftValue": "={{ $json.body.sender }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "060d9d47-dd65-45b9-860f-b52db143e046",
+              "leftValue": "={{ $json.body.device_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.2,
+      "position": [
+        400,
+        0
+      ],
+      "id": "92b9460f-af6a-4403-8da4-d54f3a0aa211",
+      "name": "Filter"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.satuconnect.my.id/agent/message",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "xxxxxxxx"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"deviceID\": \"628960xxxxxxx\", \n  \"phoneNumbers\": \"{{ $json.sender }}\",\n  \"message\": \"Data {{ $json.name }} with price {{ $json.price }} successfuly saved.\"\n} ",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1700,
+        0
+      ],
+      "id": "9126e3aa-183a-4072-a295-3496e5d8b8f8",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        200,
+        200
+      ],
+      "id": "c0917bfa-18df-4f81-9a26-ab4615ce4718",
+      "name": "When chat message received",
+      "webhookId": "e7616d0e-3319-45ae-8eab-de964a776a77"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "b6b17138-0947-4242-82bb-25fce20dbc20",
+              "leftValue": "={{ $json.chatInput }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.2,
+      "position": [
+        420,
+        200
+      ],
+      "id": "069941d5-4044-40ec-ba3f-09ca625b0a47",
+      "name": "Filter1"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "d31c3c3b-aa57-421f-9f2c-488eef97cc46",
+              "name": "chatInput",
+              "value": "={{ $json.body.message }}",
+              "type": "string"
+            },
+            {
+              "id": "ecb7b22e-267f-43c6-885a-687d958a6b6f",
+              "name": "sender",
+              "value": "={{ $json.body.sender }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        620,
+        0
+      ],
+      "id": "cacb1610-7f66-43a3-8080-e7b995a93736",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "55cf0b39-890e-4628-a485-c31404501e96",
+              "name": "chatInput",
+              "value": "={{ $json.chatInput }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        640,
+        200
+      ],
+      "id": "513057ae-c487-4b01-801a-96150f7359ca",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1f1109ry2bu4MzAEfg4qropIG2NbDNb9ULv9FpoQkeVg",
+          "mode": "list",
+          "cachedResultName": "List Product",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1f1109ry2bu4MzAEfg4qropIG2NbDNb9ULv9FpoQkeVg/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1f1109ry2bu4MzAEfg4qropIG2NbDNb9ULv9FpoQkeVg/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "product": "={{ $json.name }}",
+            "harga": "={{ $json.price }}",
+            "date": "={{ $now }}",
+            "sender": "={{ $json.sender }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "date",
+              "displayName": "date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "product",
+              "displayName": "product",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "harga",
+              "displayName": "harga",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "sender",
+              "displayName": "sender",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        1700,
+        -200
+      ],
+      "id": "c2582139-edec-4616-b9cd-1f20b1a61375",
+      "name": "Google Sheets",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "NCacp1H8ZeGIYZbN",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.chatInput }} and sender : {{ $json.sender }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "You are an AI Task Manager. Based on the input task name: {{ $json.chatInput }} and sender : {{ $json.sender }}, create a task summary in JSON with the following keys:\nReturn a JSON object with:\n- name: product name as string\n- price: price as number (integer, no formatting)\n\nExample:\n\"apple 5000\" → { \"name\": \"apple\", \"price\": 5000, \"sender\": \"628976348343\"}\n\nNow parse: \"{{ $json[\"message\"] }}\""
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        980,
+        0
+      ],
+      "id": "987361a3-f908-4611-b4e2-c6fc6487520a",
+      "name": "AI Text to JSON"
+    },
+    {
+      "parameters": {
+        "jsCode": "for (const item of $input.all()) {\n  // Step 1: Clean up and parse the string\n  const raw = $input.first().json.output || '';\n  const cleaned = raw.trim().replace(/^```json|```$/g, '').trim(); // Remove ```json and ```\n  let parsed = {};\n\n  try {\n    parsed = JSON.parse(cleaned);\n  } catch (err) {\n    parsed = { error: \"Invalid JSON format\", original: raw };\n  }\n\n  // Step 2: Modify the parsed object\n  parsed.myNewField = 1;\n\n  // Step 3: Replace or attach the result\n  item.json = parsed;\n}\n\nreturn $input.all();\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1320,
+        0
+      ],
+      "id": "623a6b39-40c5-4e2a-812e-e7349d741e07",
+      "name": "Code"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Text to JSON",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Filter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "Filter1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter1": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "AI Text to JSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "AI Text to JSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Sheets": {
+      "main": [
+        []
+      ]
+    },
+    "AI Text to JSON": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Google Sheets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "838ecfa5-f09a-405a-819a-6f9789f76b46",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "878f429b2686367260a308dbafd51727b9c43f4831144617461b0c5acf76e09d"
+  },
+  "id": "gHE9g8QWHpMRCPE9",
+  "tags": []
+}

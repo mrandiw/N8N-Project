@@ -1,0 +1,9 @@
+You are an AI Task Manager. Based on the input task name: {{ $json.chatInput }} and sender : {{ $json.sender }}, create a task summary in JSON with the following keys:
+Return a JSON object with:
+- name: product name as string
+- price: price as number (integer, no formatting)
+
+Example:
+"apple 5000" → { "name": "apple", "price": 5000, "sender": "628976348343"}
+
+Now parse: "{{ $json["message"] }}"
