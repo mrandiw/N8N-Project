@@ -1,0 +1,159 @@
+{
+  "name": "Daily Quotes Generator",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "seconds",
+              "secondsInterval": 10
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -440,
+        -80
+      ],
+      "id": "4e805d4d-b1ca-4a4a-b258-e40cf8e6c571",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-1.5-flash",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        -220,
+        120
+      ],
+      "id": "59fc00fb-8389-4d9e-bbf4-15bfb4387c9d",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "EsWKFX9MjYEdWdW3",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=berikan saya quote ala timoty ronald yang berupa kritik pedas dan kata2 yang explisit.\n\nin JSON format.\n\nexample : {quote : string not array}",
+        "options": {
+          "systemMessage": "=berperilaku sebagai timoty ronald.\n\nTimothy Ronald dikenal di YouTube dengan gaya motivasinya yang blak-blakan, realistis, dan sering disebut \"pedas\" atau \"tanpa filter\". Ia tidak ragu untuk menyampaikan pandangannya secara lugas, terkadang kontroversial, untuk menggugah pola pikir audiensnya.\n\nBeberapa contoh tema atau judul video yang menunjukkan gaya motivasi \"pedas\" Timothy Ronald di YouTube:\n\n\"Dunia Ini Milik Yang Berani\"\n\n\"Hapus Pola Pikir Yang Bikin Kamu Tetap Miskin\"\n\n\"Cara Keluar Dari Kehidupan Yang Gelap\"\n\n\"Penyakit Utama Orang Miskin\"\n\n\"Timothy Ronald: Lebih Baik Beli Rokok drpd Buat Sekolah Tuh Duit‼️Kata Bapak\" (dalam wawancara dengan Deddy Corbuzier)\n\n\"GA DENGER GUE LO PASTI MISK!N !! GUE BUANG UANG 14 JUTA SEHARI RIBUAN TAUN GA BAKAL HABIS !!\"\n\nGaya ini cenderung menantang pandangan konvensional tentang uang, kesuksesan, dan kemiskinan, seringkali menggunakan bahasa yang langsung dan provokatif untuk memicu perubahan pola pikir pada para penontonnya. Ia fokus pada pengembangan diri, investasi, dan cara pandang orang kaya versus orang miskin, dengan tujuan menginspirasi audiensnya untuk keluar dari \"rantai kemiskinan\" dan mencapai kebebasan finansial."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.9,
+      "position": [
+        -180,
+        -80
+      ],
+      "id": "90c6ae6b-5f16-4d6f-b144-8329c9b23e5f",
+      "name": "Timoty Agent"
+    },
+    {
+      "parameters": {
+        "jsCode": "for (const item of $input.all()) {\n  // Step 1: Clean up and parse the string\n  const raw = $input.first().json.output || '';\n  const cleaned = raw.trim().replace(/^```json|```$/g, '').trim(); // Remove ```json and ```\n  let parsed = {};\n\n  try {\n    parsed = JSON.parse(cleaned);\n  } catch (err) {\n    parsed = { error: \"Invalid JSON format\", original: raw };\n  }\n\n  // Step 2: Modify the parsed object\n  parsed.myNewField = 1;\n\n  // Step 3: Replace or attach the result\n  item.json = parsed;\n}\n\nreturn $input.all();\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        180,
+        -80
+      ],
+      "id": "3cd8534d-04e4-4140-a45d-8448e9689d0d",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.satuconnect.my.id/agent/message",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "szTBezyO19xehWR0h8hrfz5yz0"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"deviceID\": \"6289605877681\", \n  \"phoneNumbers\": \"6285185152388\",\n  \"message\": \"Quote of the day : \\n\\n{{ $json.quote }}\"\n} ",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        360,
+        -80
+      ],
+      "id": "ab6251e4-96ee-424f-8583-dde88562ecd5",
+      "name": "HTTP Request1"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Timoty Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Timoty Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Timoty Agent": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "c72f4aa8-b3d9-4cf3-a3ce-f59680e728bf",
+  "meta": {
+    "instanceId": "878f429b2686367260a308dbafd51727b9c43f4831144617461b0c5acf76e09d"
+  },
+  "id": "nBuNiZ47hynK3KuG",
+  "tags": []
+}
