@@ -80,13 +80,13 @@
           "parameters": [
             {
               "name": "Authorization",
-              "value": "szTBezyO19xehWR0h8hrfz5yz0"
+              "value": "xxxxx"
             }
           ]
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\n  \"deviceID\": \"6289605877681\", \n  \"phoneNumbers\": \"6285185152388\",\n  \"message\": \"Quote of the day : \\n\\n{{ $json.quote }}\"\n} ",
+        "jsonBody": "={\n  \"deviceID\": \"628960xxxxx\", \n  \"phoneNumbers\": \"62851xxxxx\",\n  \"message\": \"Quote of the day : \\n\\n{{ $json.quote }}\"\n} ",
         "options": {}
       },
       "type": "n8n-nodes-base.httpRequest",
