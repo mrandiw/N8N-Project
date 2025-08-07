@@ -1,5 +1,5 @@
 {
-  "name": "Whatsapp Chatbot",
+  "name": "Create Task to Notion",
   "nodes": [
     {
       "parameters": {
@@ -9,10 +9,10 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
       "typeVersion": 1,
       "position": [
-        280,
-        100
+        400,
+        180
       ],
-      "id": "b2dff910-6c23-47d9-9b35-ef7d71753d82",
+      "id": "14f4a5ec-54bd-49d1-80c1-e18fa75881f2",
       "name": "Google Gemini Chat Model",
       "credentials": {
         "googlePalmApi": {
@@ -30,10 +30,10 @@
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2,
       "position": [
-        -380,
-        -120
+        -260,
+        -40
       ],
-      "id": "2b6558ce-491d-4599-bf29-cb3c630ffae4",
+      "id": "77829ae3-9a86-4834-8e39-1e840dae466b",
       "name": "Webhook",
       "webhookId": "efd62a18-2847-4b6b-bbe1-f869e8faba43"
     },
@@ -85,10 +85,10 @@
       "type": "n8n-nodes-base.filter",
       "typeVersion": 2.2,
       "position": [
-        -160,
-        -120
+        -40,
+        -40
       ],
-      "id": "fbce99cd-70c7-4aad-ae6c-0cdb4e315096",
+      "id": "0489118c-bb93-44f5-af2b-ffbc6fabc730",
       "name": "Filter"
     },
     {
@@ -114,10 +114,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        60,
-        -120
+        180,
+        -40
       ],
-      "id": "2a56fc1c-b64f-451d-90d5-33a1449c8ad7",
+      "id": "fe4aede0-5717-4243-9194-528dad9e2cea",
       "name": "Edit Fields"
     },
     {
@@ -126,31 +126,30 @@
         "text": "={{ $json.chatInput }}",
         "hasOutputParser": true,
         "options": {
-          "systemMessage": "You are an AI named Jenny.\n\nYour only job is to respond to the user input: {{ $json.chatInput }}\n\nRespond with **only** a raw JSON object. Do **not** include:\n- Markdown formatting (such as triple backticks ``` or ```json)\n- Any explanation or extra text\n- Line breaks unless inside the JSON string\n\nOnly output a single-line valid JSON like this:\n\n{ \"answer\": \"your response here\" }\n"
+          "systemMessage": "You are an AI Task Creator. Based on the input task name: {{ $json.body.message }}, create a task summary in JSON with the following keys:\nReturn a JSON object with:\n- title: simple title task as string\n- preview: summary preview task as string\n- description: description task as string\n- date: datenow in Y-m-d format\n- status: status task always open as string"
         }
       },
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 1.7,
       "position": [
-        300,
-        -120
+        420,
+        -40
       ],
-      "id": "f2839423-ed9b-4e85-9b1c-1d843d30027c",
+      "id": "6994d501-9c1d-464a-a569-0ab2c891bbab",
       "name": "AI Text to JSON"
     },
     {
       "parameters": {
-        "schemaType": "manual",
-        "inputSchema": "{\n\t\"answer\": \"How can I help you?\"\n}"
+        "jsCode": "for (const item of $input.all()) {\n  // Step 1: Clean up and parse the string\n  const raw = $input.first().json.output || '';\n  const cleaned = raw.trim().replace(/^```json|```$/g, '').trim(); // Remove ```json and ```\n  let parsed = {};\n\n  try {\n    parsed = JSON.parse(cleaned);\n  } catch (err) {\n    parsed = { error: \"Invalid JSON format\", original: raw };\n  }\n\n  // Step 2: Modify the parsed object\n  parsed.myNewField = 1;\n\n  // Step 3: Replace or attach the result\n  item.json = parsed;\n}\n\nreturn $input.all();\n"
       },
-      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
-      "typeVersion": 1.2,
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
       "position": [
-        460,
-        220
+        780,
+        -40
       ],
-      "id": "0c06d3e3-6f21-42f9-8e08-306a61c9bcdd",
-      "name": "Structured Output Parser"
+      "id": "d868439e-a7bb-4964-b470-4047f3d5268b",
+      "name": "Code"
     },
     {
       "parameters": {
@@ -161,36 +160,58 @@
           "parameters": [
             {
               "name": "Authorization",
-              "value": "XXXXXXX"
+              "value": "xxxxxxx"
             }
           ]
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\n  \"deviceID\": \"62896xxxxxx\", \n  \"phoneNumbers\": \"{{ $('Edit Fields').item.json.sender }}\",\n  \"message\": \"{{ $json.answer }}\"\n} ",
+        "jsonBody": "={\n  \"deviceID\": \"xxxxxxx\", \n  \"phoneNumbers\": \"{{ $('Edit Fields').item.json.sender }}\",\n  \"message\": \"Task - {{ $json.title }} - Has ben Created.\"\n} ",
         "options": {}
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        840,
-        -120
+        1060,
+        120
       ],
-      "id": "bfac0fe5-d873-468b-b477-113ad41dcc2f",
-      "name": "HTTP Request"
+      "id": "a18ec555-7c22-4a57-8710-7cfd377fea77",
+      "name": "Send Whatsapp"
     },
     {
       "parameters": {
-        "jsCode": "for (const item of $input.all()) {\n  // Step 1: Clean up and parse the string\n  const raw = $input.first().json.output || '';\n  const cleaned = raw.trim().replace(/^```json|```$/g, '').trim(); // Remove ```json and ```\n  let parsed = {};\n\n  try {\n    parsed = JSON.parse(cleaned);\n  } catch (err) {\n    parsed = { error: \"Invalid JSON format\", original: raw };\n  }\n\n  // Step 2: Modify the parsed object\n  parsed.myNewField = 1;\n\n  // Step 3: Replace or attach the result\n  item.json = parsed;\n}\n\nreturn $input.all();\n"
+        "method": "POST",
+        "url": "https://api.notion.com/v1/pages",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer xxxxxxx"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Notion-Version",
+              "value": "2022-06-28"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"parent\": {\n    \"database_id\": \"xxxxxxx\"\n  },\n  \"properties\": {\n    \"Name\": {\n      \"title\": [\n        {\n          \"text\": {\n            \"content\": \"{{ $json.title }}\"\n          }\n        }\n      ]\n    },\n    \"Description\": {\n      \"rich_text\": [\n        {\n          \"text\": {\n            \"content\": \"{{ $json.preview }}\"\n          }\n        }\n      ]\n    },\n    \"Date\": {\n      \"date\": {\n        \"start\": \"{{ $today }}\"\n      }\n    },\n    \"Status\": {\n      \"select\": {\n        \"name\": \"{{ $json.status }}\"\n      }\n    }\n  },\n  \"children\": [\n    {\n      \"object\": \"block\",\n      \"type\": \"heading_2\",\n      \"heading_2\": {\n        \"rich_text\": [\n          {\n            \"type\": \"text\",\n            \"text\": {\n              \"content\": \"{{ $json.title }}\"\n            }\n          }\n        ]\n      }\n    },\n    {\n      \"object\": \"block\",\n      \"type\": \"paragraph\",\n      \"paragraph\": {\n        \"rich_text\": [\n          {\n            \"type\": \"text\",\n            \"text\": {\n              \"content\": \"{{ $json.description }}\"\n            }\n          }\n        ]\n      }\n    }\n  ]\n}",
+        "options": {}
       },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
       "position": [
-        660,
-        -120
+        1060,
+        -100
       ],
-      "id": "1c2d6768-15b5-4633-a182-05fbf7fbe696",
-      "name": "Code"
+      "id": "9e0c3c18-a0f1-4574-96f1-1d0500c090a8",
+      "name": "Save Notion"
     }
   ],
   "pinData": {},
@@ -239,11 +260,6 @@
         ]
       ]
     },
-    "Structured Output Parser": {
-      "ai_outputParser": [
-        []
-      ]
-    },
     "AI Text to JSON": {
       "main": [
         [
@@ -259,7 +275,12 @@
       "main": [
         [
           {
-            "node": "HTTP Request",
+            "node": "Send Whatsapp",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Save Notion",
             "type": "main",
             "index": 0
           }
@@ -267,14 +288,14 @@
       ]
     }
   },
-  "active": true,
+  "active": false,
   "settings": {
     "executionOrder": "v1"
   },
-  "versionId": "0b453a98-b6d1-46c9-991e-e0b1dd42378e",
+  "versionId": "aa5995dd-4507-44fb-8625-89c55d7a15a1",
   "meta": {
     "instanceId": "878f429b2686367260a308dbafd51727b9c43f4831144617461b0c5acf76e09d"
   },
-  "id": "9kwhMILXl5LffoiB",
+  "id": "aoRZiw2Pf60iFGn5",
   "tags": []
 }

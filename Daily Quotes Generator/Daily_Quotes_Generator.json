@@ -36,7 +36,7 @@
       "name": "Google Gemini Chat Model",
       "credentials": {
         "googlePalmApi": {
-          "id": "EsWKFX9MjYEdWdW3",
+          "id": "xxxxxxx",
           "name": "Google Gemini(PaLM) Api account"
         }
       }
